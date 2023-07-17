@@ -104,10 +104,8 @@ class NitroWalletStack(Stack):
         nitro_instance_sg.add_ingress_rule(nitro_instance_sg,
                                            aws_ec2.Port.tcp(443))
 
-        # AMI
-        amzn_linux = aws_ec2.MachineImage.latest_amazon_linux(
-            generation=aws_ec2.AmazonLinuxGeneration.AMAZON_LINUX_2
-        )
+        # Custom AMI ID provided by your organization
+        custom_ami_id = "<your_custom_ami_id>"
 
         # Instance Role and SSM Managed Policy
         role = aws_iam.Role(self, "InstanceSSM",
@@ -116,14 +114,14 @@ class NitroWalletStack(Stack):
         role.add_managed_policy(aws_iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AmazonEC2RoleforSSM"))
 
         block_device = aws_ec2.BlockDevice(device_name="/dev/xvda",
-                                           volume=aws_ec2.BlockDeviceVolume(
-                                               ebs_device=aws_ec2.EbsDeviceProps(
-                                                   volume_size=32,
-                                                   volume_type=aws_ec2.EbsDeviceVolumeType.GP2,
-                                                   encrypted=True,
-                                                   delete_on_termination=True if params.get(
-                                                       'deployment') == "dev" else False,
-                                               )))
+                                        volume=aws_ec2.BlockDeviceVolume(
+                                            ebs_device=aws_ec2.EbsDeviceProps(
+                                                volume_size=32,
+                                                volume_type=aws_ec2.EbsDeviceVolumeType.GP2,
+                                                encrypted=True,
+                                                delete_on_termination=True if params.get(
+                                                    'deployment') == "dev" else False,
+                                            )))
 
         mappings = {"__DEV_MODE__": params["deployment"],
                     "__SIGNING_SERVER_IMAGE_URI__": signing_server_image.image_uri,
@@ -138,16 +136,17 @@ class NitroWalletStack(Stack):
         encrypted_key.grant_read(role)
 
         nitro_instance = aws_ec2.Instance(self, "NitroEC2Instance",
-                                          instance_type=aws_ec2.InstanceType("m5a.xlarge"),
-                                          machine_image=amzn_linux,
-                                          block_devices=[block_device],
-                                          role=role,
-                                          security_group=nitro_instance_sg,
-                                          vpc=vpc,
-                                          vpc_subnets=aws_ec2.SubnetSelection(
-                                              subnet_type=aws_ec2.SubnetType.PRIVATE_WITH_EGRESS),
-                                          user_data=aws_ec2.UserData.custom(user_data_raw)
-                                          )
+                                        instance_type=aws_ec2.InstanceType("m5a.xlarge"),
+                                        machine_image=aws_ec2.MachineImage.from_machine_image_id(self, "CustomAMI", custom_ami_id),
+                                        block_devices=[block_device],
+                                        role=role,
+                                        security_group=nitro_instance_sg,
+                                        vpc=vpc,
+                                        vpc_subnets=aws_ec2.SubnetSelection(
+                                            subnet_type=aws_ec2.SubnetType.PRIVATE_WITH_EGRESS),
+                                        user_data=aws_ec2.UserData.custom(user_data_raw)
+                                        )
+
 
         invoke_lambda = aws_lambda.Function(self, "NitroInvokeLambda",
                                             code=aws_lambda.Code.from_asset(
