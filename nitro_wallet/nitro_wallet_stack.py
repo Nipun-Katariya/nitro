@@ -135,7 +135,7 @@ class NitroWalletStack(Stack):
         signing_server_image.repository.grant_pull(role)
         encrypted_key.grant_read(role)
 
-        machineImage = new ec2.GenericLinuxImage({
+        machineImage = aws_ec2.GenericLinuxImage({
             'eu-west-1': custom_ami_id})
         
         nitro_instance = aws_ec2.Instance(self, "NitroEC2Instance",
