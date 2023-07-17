@@ -105,7 +105,7 @@ class NitroWalletStack(Stack):
                                            aws_ec2.Port.tcp(443))
 
         # Custom AMI ID provided by your organization
-        custom_ami_id = "<your_custom_ami_id>"
+        custom_ami_id = "ami-017e529989798198e"
 
         # Instance Role and SSM Managed Policy
         role = aws_iam.Role(self, "InstanceSSM",
