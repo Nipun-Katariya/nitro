@@ -137,7 +137,7 @@ class NitroWalletStack(Stack):
 
         nitro_instance = aws_ec2.Instance(self, "NitroEC2Instance",
                                         instance_type=aws_ec2.InstanceType("m5a.xlarge"),
-                                        machine_image=aws_ec2.MachineImage.from_machine_image_id(self, "CustomAMI", custom_ami_id),
+                                        machine_image=aws_ec2.MachineImage.generic_linux(custom_ami_id),
                                         block_devices=[block_device],
                                         role=role,
                                         security_group=nitro_instance_sg,
